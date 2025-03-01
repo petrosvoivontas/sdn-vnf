@@ -30,10 +30,15 @@ def topology():
     info('*** Adding Docker NAT VNF\n')
     info('*** Setting up routing to Docker NAT VNF\n')
     
+    info('*** Create br0 and connect it to vnf_nat')
     os.system('ovs-docker add-port br0 eth1 vnf_nat --ipaddress=10.0.0.2/24')
     os.system('ip link add veth_mininet type veth peer name veth_br0')
+
+    info('*** Add port veth_mininet to s1')
     os.system('ovs-vsctl add-port s1 veth_mininet')
     os.system('ip link set veth_mininet up')
+
+    info('*** Add port veth_br0 to br0')
     os.system('ovs-vsctl add-port br0 veth_br0')
     os.system('ip link set veth_br0 up')
 
