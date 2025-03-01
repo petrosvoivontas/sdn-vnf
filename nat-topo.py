@@ -30,6 +30,7 @@ def topology():
     info('*** Adding Docker NAT VNF\n')
     info('*** Setting up routing to Docker NAT VNF\n')
     
+    os.system('ovs-docker add-port br0 eth1 vnf_nat --ipaddress=10.0.0.2/24')
     os.system('ip link add veth_mininet type veth peer name veth_br0')
     os.system('ovs-vsctl add-port s1 veth_mininet')
     os.system('ip link set veth_mininet up')
@@ -37,7 +38,7 @@ def topology():
     os.system('ip link set veth_br0 up')
 
     nat_gateway = '10.0.0.2'
-    host1.cmd(f'route add default gw {nat_gateway}')
+    net.addNAT('nat0', ip=nat_gateway)
 
     info('*** Testing network\n')
     CLI(net)
@@ -51,7 +52,7 @@ def topology():
     os.system('ip link set veth_mininet down')
     os.system('ip link set veth_br0 down')
     os.system('ip link delete veth_mininet')
+    os.system('ovs-docker del-port br0 eth1 vnf_nat')
 
 if __name__ == '__main__':
     topology()
-
