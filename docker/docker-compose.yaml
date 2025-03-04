@@ -11,3 +11,10 @@ services:
             - NET_RAW
         environment:
             - NAT_INTF=eth0
+    dns_nat:
+        image: coredns/coredns
+        container_name: vnf_dns
+        cap_add:
+            - NET_ADMIN
+        volumes:
+            - ${PWD}/Corefile:/etc/coredns/Corefile
