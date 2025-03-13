@@ -45,6 +45,7 @@ def topology():
     nat_gateway = '10.0.0.2'
     net.addNAT('nat0', ip=nat_gateway)
 
+	# Configure DNS for hosts
     for host in net.hosts:
         host.cmd("echo 'nameserver 10.0.0.100' > /etc/resolv.conf")
 
