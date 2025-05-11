@@ -1,0 +1,11 @@
+FROM --platform=$BUILDPLATFORM alpine:latest
+
+# Install necessary packages: iproute2 includes `tc`
+RUN apk add --no-cache iproute2 iputils bash
+
+# Copy optional startup script (e.g., for default shaping rules)
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Set entrypoint
+ENTRYPOINT ["/entrypoint.sh"]

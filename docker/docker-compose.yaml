@@ -32,3 +32,14 @@ services:
         cap_add:
             - NET_ADMIN
             - NET_RAW
+    vnf_tc:
+        image: vnf_tc:0.0.1
+        container_name: vnf_tc
+        build:
+            context: ./tc
+            dockerfile: Dockerfile.TC
+        stdin_open: true
+        tty: true
+        cap_add:
+            - NET_ADMIN
+            - NET_RAW

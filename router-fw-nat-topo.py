@@ -27,7 +27,7 @@ def setupFirewallVnf(firewall_default_route, prev_vnf_ip):
 	info('*** Setting up routing to Docker Firewall VNF\n')
 	os.system('ovs-docker add-port br0 eth1 vnf_firewall --ipaddress={}/24'.format(eth1Ip))
 
-	# route traffic to the NAT VNF
+	# route traffic to the TC VNF
 	os.system('docker exec vnf_firewall ip route del default')
 	os.system('docker exec vnf_firewall ip route add default via {}'.format(firewall_default_route))
 
@@ -54,6 +54,25 @@ def setupNatVnf(prev_vnf_ip):
 
 	return eth1Ip
 
+def setupTCVnf(tc_default_route, prev_vnf_ip):
+	eth1Ip = '10.0.0.5'
+
+	info('*** Adding Docker Traffic Shaping VNF\n')
+	info('*** Setting up routing to Docker Traffic Shaping VNF\n')
+	os.system('ovs-docker add-port br0 eth1 vnf_tc --ipaddress={}/24'.format(eth1Ip))
+
+	# route traffic to the NAT VNF
+	os.system('docker exec vnf_tc ip route del default')
+	os.system('docker exec vnf_tc ip route add default via {}'.format(tc_default_route))
+
+	# route packets from the 2nd subnet back the VNF chain
+	subnet2IpRange = '10.0.1.0/24'
+	subnet2Gateway = prev_vnf_ip
+	subnet2IpRouteCmd = 'ip route add {} via {} dev eth1'.format(subnet2IpRange, subnet2Gateway)
+	os.system('docker exec vnf_tc {}'.format(subnet2IpRouteCmd))
+
+	return eth1Ip
+
 def topology():
 	setLogLevel('info')
 
@@ -63,8 +82,8 @@ def topology():
 	net.addController('c0')
 
 	info('*** Adding hosts\n')
-	host1 = net.addHost('h1', ip='10.0.0.5/24')
-	host2 = net.addHost('h2', ip='10.0.0.6/24')
+	host1 = net.addHost('h1', ip='10.0.0.6/24')
+	host2 = net.addHost('h2', ip='10.0.0.7/24')
 	host3 = net.addHost('h3', ip='10.0.1.3/24')
 
 	info('*** Adding switch\n')
@@ -78,8 +97,9 @@ def topology():
 	info('*** Starting network\n')
 	net.start()
 
-	natIp = setupNatVnf(prev_vnf_ip='10.0.0.3')
-	firewallIp = setupFirewallVnf(firewall_default_route=natIp, prev_vnf_ip='10.0.0.2')
+	natIp = setupNatVnf(prev_vnf_ip='10.0.0.5')
+	tcIp = setupTCVnf(tc_default_route=natIp, prev_vnf_ip='10.0.0.3')
+	firewallIp = setupFirewallVnf(firewall_default_route=tcIp, prev_vnf_ip='10.0.0.2')
 	(defaultRouteForEth1, defaultRouteForEth2) = setupRouterVnf(router_default_route=firewallIp)
 	
 	os.system('ip link add veth_mininet type veth peer name veth_br0')
@@ -121,6 +141,7 @@ def topology():
 	os.system('ovs-docker del-port br0 eth1 vnf_nat')
 	os.system('ovs-docker del-port br0 eth1 vnf_firewall')
 	os.system('ovs-docker del-port br0 eth1 vnf_frr')
+	os.system('ovs-docker del-port br0 eth1 vnf_tc')
 
 	os.system('ovs-vsctl del-port br1 veth_br1')
 	os.system('ip link set veth_mininet1 down')
