@@ -1,0 +1,6 @@
+FROM --platform=$BUILDPLATFORM alpine:latest
+
+# Install dependencies
+RUN apk add --no-cache frr iproute2 iputils curl tcpdump
+
+CMD /bin/sh

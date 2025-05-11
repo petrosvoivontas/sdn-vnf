@@ -18,3 +18,17 @@ services:
             - NET_ADMIN
         volumes:
             - ${PWD}/Corefile:/etc/coredns/Corefile
+    vnf_frr:
+        image: vnf_frr:0.0.1
+        container_name: vnf_frr
+        build:
+            context: ./frr
+            dockerfile: Dockerfile.FRR
+        volumes:
+            - ./frr/frr.conf:/etc/frr/frr.conf:ro
+            - ./frr/daemons:/etc/frr/daemons:ro
+        stdin_open: true
+        tty: true
+        cap_add:
+            - NET_ADMIN
+            - NET_RAW
