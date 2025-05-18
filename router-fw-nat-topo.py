@@ -73,6 +73,21 @@ def setupTCVnf(tc_default_route, prev_vnf_ip):
 
 	return eth1Ip
 
+def setupDNSVnf(dns_default_route):
+	eth1Ip = '10.0.0.100'
+	eth2Ip = '10.0.1.100'
+
+	info('*** Adding Docker DNS VNF\n')
+	info('*** Setting up routing to Docker DNS VNF\n')
+	os.system('ovs-docker add-port br0 eth1 vnf_dns --ipaddress={}/24'.format(eth1Ip))
+	os.system('ovs-docker add-port br1 eth2 vnf_dns --ipaddress={}/24'.format(eth2Ip))
+
+	# route traffic to the NAT VNF
+	os.system('docker exec vnf_dns ip route del default')
+	os.system('docker exec vnf_dns ip route add default via {}'.format(dns_default_route))
+
+	return (eth1Ip, eth2Ip)
+
 def topology():
 	setLogLevel('info')
 
@@ -101,6 +116,7 @@ def topology():
 	tcIp = setupTCVnf(tc_default_route=natIp, prev_vnf_ip='10.0.0.3')
 	firewallIp = setupFirewallVnf(firewall_default_route=tcIp, prev_vnf_ip='10.0.0.2')
 	(defaultRouteForEth1, defaultRouteForEth2) = setupRouterVnf(router_default_route=firewallIp)
+	(dnsIp1, dnsIp2) = setupDNSVnf(dns_default_route=natIp)
 	
 	os.system('ip link add veth_mininet type veth peer name veth_br0')
 
@@ -125,6 +141,13 @@ def topology():
 	host1.cmd("ip route add default via {}".format(defaultRouteForEth1))
 	host2.cmd("ip route add default via {}".format(defaultRouteForEth1))
 	host3.cmd("ip route add default via {}".format(defaultRouteForEth2))
+	
+	info('*** Setup DNS on hosts\n')
+	# host1.cmd("echo 'nameserver {}' >> /etc/resolv.conf".format(dnsIp1))
+	host1.cmd('rm /etc/resolv.conf')
+	host1.cmd('ln -s $(pwd)/resolv.conf /etc/resolv.conf')
+	# host1.cmd('resolvectl dns h1-eth0 10.0.0.100')
+	# host3.cmd("echo 'nameserver {}' >> /etc/resolv.conf".format(dnsIp2))
 
 	info('*** Testing network\n')
 	CLI(net)
@@ -142,6 +165,8 @@ def topology():
 	os.system('ovs-docker del-port br0 eth1 vnf_firewall')
 	os.system('ovs-docker del-port br0 eth1 vnf_frr')
 	os.system('ovs-docker del-port br0 eth1 vnf_tc')
+	os.system('ovs-docker del-port br0 eth1 vnf_dns')
+	os.system('ovs-docker del-port br1 eth2 vnf_dns')
 
 	os.system('ovs-vsctl del-port br1 veth_br1')
 	os.system('ip link set veth_mininet1 down')

@@ -11,13 +11,24 @@ services:
             - NET_RAW
         environment:
             - NAT_INTF=eth0
-    dns_nat:
-        image: coredns/coredns
+    vnf_dns:
+        image: vnf_dns:0.0.1
+        build:
+            context: ./dns
+            dockerfile: Dockerfile.DNS
         container_name: vnf_dns
         cap_add:
             - NET_ADMIN
         volumes:
-            - ${PWD}/Corefile:/etc/coredns/Corefile
+            - ./dns/Corefile:/etc/coredns/Corefile
+    vnf_fw:
+        image: vnf_firewall:0.0.1
+        container_name: vnf_firewall
+        stdin_open: true
+        tty: true
+        cap_add:
+            - NET_ADMIN
+            - NET_RAW
     vnf_frr:
         image: vnf_frr:0.0.1
         container_name: vnf_frr
