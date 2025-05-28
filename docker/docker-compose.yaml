@@ -54,3 +54,19 @@ services:
         cap_add:
             - NET_ADMIN
             - NET_RAW
+    vnf_lb:
+        image: vnf_lb:0.0.1
+        container_name: vnf_lb
+        build:
+            context: ./lb
+            dockerfile: Dockerfile.LB
+        stdin_open: true
+        tty: true
+    lb_backend1:
+        image: nginx:stable-alpine
+        container_name: lb_backend1
+        hostname: lb_backend1
+    lb_backend2:
+        image: nginx:stable-alpine
+        container_name: lb_backend2
+        hostname: lb_backend2

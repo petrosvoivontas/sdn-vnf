@@ -88,6 +88,15 @@ def setupDNSVnf(dns_default_route):
 
 	return (eth1Ip, eth2Ip)
 
+def setupLbVnf():
+	eth1Ip = '10.0.0.8'
+	eth2Ip = '10.0.1.8'
+
+	info('*** Adding Docker Load Balancer VNF\n')
+	info('*** Setting up routing to Docker Load Balancer VNF\n')
+	os.system('ovs-docker add-port br0 eth1 vnf_lb --ipaddress={}/24'.format(eth1Ip))
+	os.system('ovs-docker add-port br1 eth2 vnf_lb --ipaddress={}/24'.format(eth2Ip))
+
 def topology():
 	setLogLevel('info')
 
@@ -117,6 +126,7 @@ def topology():
 	firewallIp = setupFirewallVnf(firewall_default_route=tcIp, prev_vnf_ip='10.0.0.2')
 	(defaultRouteForEth1, defaultRouteForEth2) = setupRouterVnf(router_default_route=firewallIp)
 	(dnsIp1, dnsIp2) = setupDNSVnf(dns_default_route=natIp)
+	setupLbVnf()
 	
 	os.system('ip link add veth_mininet type veth peer name veth_br0')
 
@@ -167,6 +177,8 @@ def topology():
 	os.system('ovs-docker del-port br0 eth1 vnf_tc')
 	os.system('ovs-docker del-port br0 eth1 vnf_dns')
 	os.system('ovs-docker del-port br1 eth2 vnf_dns')
+	os.system('ovs-docker del-port br0 eth1 vnf_lb')
+	os.system('ovs-docker del-port br1 eth2 vnf_lb')
 
 	os.system('ovs-vsctl del-port br1 veth_br1')
 	os.system('ip link set veth_mininet1 down')
