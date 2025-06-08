@@ -1,6 +1,6 @@
 from mininet.net import Mininet
-from mininet.node import Host, Controller
-from mininet.link import Link, TCLink
+from mininet.node import Controller
+from mininet.link import TCLink
 from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 import os
