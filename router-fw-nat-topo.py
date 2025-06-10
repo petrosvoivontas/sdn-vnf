@@ -153,11 +153,8 @@ def topology():
 	host3.cmd("ip route add default via {}".format(defaultRouteForEth2))
 	
 	info('*** Setup DNS on hosts\n')
-	# host1.cmd("echo 'nameserver {}' >> /etc/resolv.conf".format(dnsIp1))
 	host1.cmd('rm /etc/resolv.conf')
 	host1.cmd('ln -s $(pwd)/resolv.conf /etc/resolv.conf')
-	# host1.cmd('resolvectl dns h1-eth0 10.0.0.100')
-	# host3.cmd("echo 'nameserver {}' >> /etc/resolv.conf".format(dnsIp2))
 
 	info('*** Testing network\n')
 	CLI(net)
